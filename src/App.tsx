@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import Menu from "./components/Menu/Menu";
+import React, { useRef, useState } from "react";
+import Menu from "./components/Menu";
 import NoProjects from "./components/NoProjects";
-import Project from "./components/Project/Project";
-import NewProject from "./components/NewProject/NewProject";
+import Project from "./components/Project";
+import NewProject from "./components/NewProject";
 
 export interface Project {
   id: string;
@@ -12,11 +12,22 @@ export interface Project {
   tasks: string[];
 }
 
+export type InputsRef = {
+  title: HTMLInputElement | null;
+  description: HTMLTextAreaElement | null;
+  date: HTMLInputElement | null;
+};
+
 const App: React.FC = () => {
   const [projects, setProjects] = useState([] as Project[]);
   const [selectedProject, setSelectedProject] = useState<
     Project | "newProject" | undefined
   >();
+  const inputRef = useRef<InputsRef>({
+    title: null,
+    description: null,
+    date: null,
+  });
 
   const handleNewProject = () => {
     setSelectedProject("newProject");
@@ -27,9 +38,28 @@ const App: React.FC = () => {
     setSelectedProject(undefined);
   };
 
-  const handleSaveProject = (project: Project) => {
-    setProjects((prevProjects) => [...prevProjects, project]);
-    setSelectedProject(project);
+  const handleSaveProject = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (
+      !inputRef.current?.title?.value ||
+      !inputRef.current?.description?.value ||
+      !inputRef.current?.date?.value
+    ) {
+      return alert("Please fill all the fields");
+    } else {
+      const project: Project = {
+        id:
+          Math.random().toString() +
+          inputRef.current?.title?.value +
+          Date.now().toString(),
+        title: inputRef.current?.title?.value,
+        description: inputRef.current.description?.value,
+        date: inputRef.current.date?.value,
+        tasks: [],
+      };
+      setProjects((prevProjects) => [...prevProjects, project]);
+      setSelectedProject(project);
+    }
   };
 
   const handleProjectSelected = (projectId: string) => {
@@ -66,7 +96,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <main className="flex flex-row">
+    <main className="flex flex-row pt-10">
       <Menu
         projects={projects}
         newProjectHandler={handleNewProject}
@@ -79,8 +109,9 @@ const App: React.FC = () => {
       {/* Create New Project */}
       {selectedProject === "newProject" && (
         <NewProject
-          saveProject={handleSaveProject}
+          saveProjectHandler={handleSaveProject}
           cancelProjectHandler={handleCancelNewProject}
+          ref={inputRef}
         />
       )}
       {/* Project Current Opened */}

@@ -6,21 +6,23 @@ type Props = {
 };
 
 const Input = forwardRef(({ label, type }: Props, ref) => {
-  const inputStyle =
-    "bg-formInput border-b-2 border-formInputBottomBorder outline-none focus:border-formInputBottomBorderFocus py-1.5 rounded-sm text-formInputText font-medium text-xl px-2.5";
   return (
     <p className="flex flex-col gap-1">
-      <label className="text-formLabel uppercase font-bold">{label}</label>
+      <label className="text-stone-600 uppercase font-bold">{label}</label>
       {type === "textarea" ? (
         <textarea
           ref={ref as React.RefObject<HTMLTextAreaElement>}
-          className={inputStyle}
+          className={
+            "bg-stone-200 border-b-2 border-stone-400 outline-none focus:border-stone-800 py-1.5 rounded-sm text-stone-600 font-medium text-xl px-2.5"
+          }
         ></textarea>
       ) : (
         <input
           ref={ref as React.RefObject<HTMLInputElement>}
           type={type}
-          className={inputStyle}
+          className={
+            "bg-stone-200 border-b-2 border-stone-400 outline-none focus:border-stone-800 py-1.5 rounded-sm text-stone-600 font-medium text-xl px-2.5"
+          }
         />
       )}
     </p>
