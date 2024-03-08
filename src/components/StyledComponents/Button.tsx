@@ -9,13 +9,15 @@ const Button: React.FC<Button> = ({ children, button, ...props }) => {
   return (
     <>
       {!button ? (
+        // Default button
         <button
           {...props}
-          className="text-stone-400 hover:text-stone-300 bg-stone-800 hover:bg-stone-700 rounded-md text-xl px-5 py-2.5"
+          className="text-stone-400 hover:text-stone-100 bg-stone-700 hover:bg-stone-600 rounded-md text-xl md:text-2xl px-6 py-2.5"
         >
           {children}
         </button>
       ) : (
+        // Save or Cancel button
         <button
           {...props}
           className={`text-xl px-5 py-2.5 ${

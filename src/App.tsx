@@ -1,13 +1,14 @@
 import React, { useRef, useState } from "react";
-import Menu from "./components/Menu";
-import NoProjects from "./components/NoProjects";
-import Project from "./components/Project";
-import NewProject from "./components/NewProject";
+import Menu from "./components/Menu/Menu";
+import NoProjects from "./components/NoProjects/NoProjects";
+import Project from "./components/Project/Project";
+import NewProject from "./components/NewProject/NewProject";
+import Modal from "./components/StyledComponents/Modal";
 
 export interface Project {
   id: string;
   title: string | undefined;
-  date: string | undefined;
+  dueDate: string | undefined;
   description: string | undefined;
   tasks: string[];
 }
@@ -15,37 +16,64 @@ export interface Project {
 export type InputsRef = {
   title: HTMLInputElement | null;
   description: HTMLTextAreaElement | null;
-  date: HTMLInputElement | null;
+  dueDate: HTMLInputElement | null;
+};
+
+type ModalRef = {
+  open: () => void;
 };
 
 const App: React.FC = () => {
-  const [projects, setProjects] = useState([] as Project[]);
-  const [selectedProject, setSelectedProject] = useState<
-    Project | "newProject" | undefined
-  >();
+  // State for the projects
+  const [projectState, setProjectState] = useState<{
+    selectedProject: Project | "newProject" | undefined;
+    projects: Project[];
+  }>({
+    selectedProject: undefined,
+    projects: [],
+  });
+  // Ref object for the inputs
   const inputRef = useRef<InputsRef>({
     title: null,
     description: null,
-    date: null,
+    dueDate: null,
   });
-
-  const handleNewProject = () => {
-    setSelectedProject("newProject");
+  // Manage the modal
+  const modalRef = useRef<ModalRef>(null);
+  // Add a new project, set the selected project to "newProject". Is used in the Menu and the NoProjects
+  const addProject = () => {
+    setProjectState((prevState) => ({
+      ...prevState,
+      selectedProject: "newProject",
+    }));
   };
+  // Select a project. Is used in the Menu
+  const handleProjectSelected = (projectId: string) => {
+    const project = projectState.projects.find(
+      (project) => project.id === projectId
+    );
 
-  const handleCancelNewProject = (event: React.FormEvent) => {
-    event.preventDefault();
-    setSelectedProject(undefined);
+    setProjectState((prevState) => ({
+      ...prevState,
+      selectedProject: project,
+    }));
   };
-
-  const handleSaveProject = (event: React.FormEvent) => {
-    event.preventDefault();
+  // Cancel the new project creation. Is used in the NewProject
+  const handleCancelNewProject = () => {
+    setProjectState((prevState) => ({
+      ...prevState,
+      selectedProject: undefined,
+    }));
+  };
+  // Save the new project and move to him. Is used in the NewProject
+  const handleSaveNewProject = () => {
     if (
       !inputRef.current?.title?.value ||
       !inputRef.current?.description?.value ||
-      !inputRef.current?.date?.value
+      !inputRef.current?.dueDate?.value
     ) {
-      return alert("Please fill all the fields");
+      modalRef.current?.open();
+      return;
     } else {
       const project: Project = {
         id:
@@ -54,75 +82,105 @@ const App: React.FC = () => {
           Date.now().toString(),
         title: inputRef.current?.title?.value,
         description: inputRef.current.description?.value,
-        date: inputRef.current.date?.value,
+        dueDate: inputRef.current.dueDate?.value,
         tasks: [],
       };
-      setProjects((prevProjects) => [...prevProjects, project]);
-      setSelectedProject(project);
+      setProjectState((prevState) => ({
+        ...prevState,
+        projects: [...prevState.projects, project],
+        selectedProject: project,
+      }));
     }
   };
 
-  const handleProjectSelected = (projectId: string) => {
-    const project = projects.find((project) => project.id === projectId);
-    setSelectedProject(project);
-  };
-
+  // Delete the project from the array. Is used in the Project
   const handleDeleteProject = (projectId: string) => {
-    setProjects((prevProjects) =>
-      prevProjects.filter((project) => project.id !== projectId)
-    );
-    setSelectedProject(undefined);
+    setProjectState((prevState) => ({
+      ...prevState,
+      projects: prevState.projects.filter(
+        (project) => project.id !== projectId
+      ),
+      selectedProject: undefined,
+    }));
   };
-
+  // Add a new task to the project. Is used in the Tasks
   const handleAddTask = (projectId: string, task: string) => {
-    const project = projects.find((project) => project.id === projectId);
+    const project = projectState.projects.find(
+      (project) => project.id === projectId
+    );
     if (project) {
       project.tasks.push(task);
-      setProjects((prevProjects) => [
-        ...prevProjects.filter((project) => project.id !== projectId),
-        project,
-      ]);
+      setProjectState((prevState) => ({
+        ...prevState,
+        projects: [
+          ...prevState.projects.filter((project) => project.id !== projectId),
+          project,
+        ],
+      }));
     }
   };
+  // Clear a task from the project. Is used in the Tasks
   const handleClearTask = (projectId: string, index: number) => {
-    const project = projects.find((project) => project.id === projectId);
+    const project = projectState.projects.find(
+      (project) => project.id === projectId
+    );
     if (project) {
       project.tasks.splice(index, 1);
-      setProjects((prevProjects) => [
-        ...prevProjects.filter((project) => project.id !== projectId),
-        project,
-      ]);
+      setProjectState((prevState) => ({
+        ...prevState,
+        projects: [
+          ...prevState.projects.filter((project) => project.id !== projectId),
+          project,
+        ],
+      }));
     }
   };
 
   return (
-    <main className="flex flex-row pt-10">
+    <main className="flex min-h-screen pt-10 gap-12">
+      {/* Menu in the left side */}
       <Menu
-        projects={projects}
-        newProjectHandler={handleNewProject}
+        projects={projectState.projects}
+        newProjectHandler={addProject}
         projectSelectionHandler={handleProjectSelected}
+        selectedProject={projectState.selectedProject}
       />
       {/* No Project Selected */}
-      {selectedProject === undefined && (
-        <NoProjects newProjectHandler={handleNewProject} />
+      {projectState.selectedProject === undefined && (
+        <NoProjects newProjectHandler={addProject} />
       )}
       {/* Create New Project */}
-      {selectedProject === "newProject" && (
-        <NewProject
-          saveProjectHandler={handleSaveProject}
-          cancelProjectHandler={handleCancelNewProject}
-          ref={inputRef}
-        />
+      {projectState.selectedProject === "newProject" && (
+        <>
+          <NewProject
+            saveProjectHandler={handleSaveNewProject}
+            cancelProjectHandler={handleCancelNewProject}
+            ref={inputRef}
+          />
+          {/* Error handler modal */}
+          <Modal ref={modalRef} buttonCaption="Okay">
+            <h1 className="text-stone-500 font-bold text-3xl my-4">
+              Invalid Input
+            </h1>
+            <p className="text-stone-600 text-2xl mb-5">
+              Oops ... looks like you forgot to enter a value.
+            </p>
+            <p className="text-stone-600 text-2xl mb-5">
+              Please make sure you provide a valid value for every input field.
+            </p>
+          </Modal>
+        </>
       )}
       {/* Project Current Opened */}
-      {selectedProject !== "newProject" && selectedProject && (
-        <Project
-          project={selectedProject}
-          deleteProjectHandler={handleDeleteProject}
-          addTaskHandler={handleAddTask}
-          clearTaskHandler={handleClearTask}
-        />
-      )}
+      {projectState.selectedProject !== "newProject" &&
+        projectState.selectedProject && (
+          <Project
+            project={projectState.selectedProject}
+            deleteProjectHandler={handleDeleteProject}
+            addTaskHandler={handleAddTask}
+            clearTaskHandler={handleClearTask}
+          />
+        )}
     </main>
   );
 };

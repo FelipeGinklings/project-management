@@ -1,27 +1,25 @@
-import React, { forwardRef } from "react";
-import Input from "./NewProject/Input";
+import { RefObject, forwardRef } from "react";
+import Input from "./Input";
 import { InputsRef } from "src/App";
-import Button from "./StyledComponents/Button";
+import Button from "../StyledComponents/Button";
 
 type Props = {
-  cancelProjectHandler: (event: React.FormEvent) => void;
-  saveProjectHandler: (event: React.FormEvent) => void;
+  cancelProjectHandler: () => void;
+  saveProjectHandler: () => void;
 };
 
 const NewProject = forwardRef(
   ({ cancelProjectHandler, saveProjectHandler }: Props, ref) => {
-    const inputRef = ref as React.RefObject<InputsRef>;
     return (
-      <form
-        className="flex-1 flex-col mt-10 pt-24 pl-10 pr-36 mr-6 justify-start items-start"
-        onSubmit={saveProjectHandler}
-      >
+      <section className="w-[46rem] mt-16 justify-start items-start">
         {/* Buttons */}
         <div className="flex flex-row mb-2.5 justify-end items-center">
           <Button button="cancel" onClick={cancelProjectHandler}>
             Cancel
           </Button>
-          <Button button="save">Save</Button>
+          <Button button="save" onClick={saveProjectHandler}>
+            Save
+          </Button>
         </div>
         {/* Inputs */}
         <div className="flex flex-col gap-4">
@@ -29,25 +27,25 @@ const NewProject = forwardRef(
             label="Title"
             type="text"
             ref={(el: HTMLInputElement) => {
-              inputRef.current!.title = el;
+              (ref as RefObject<InputsRef>).current!.title = el;
             }}
           />
           <Input
             label="Description"
             type="textarea"
             ref={(el: HTMLTextAreaElement) => {
-              inputRef.current!.description = el;
+              (ref as RefObject<InputsRef>).current!.description = el;
             }}
           />
           <Input
-            label="Date"
+            label="Due Date"
             type="date"
             ref={(el: HTMLInputElement) => {
-              inputRef.current!.date = el;
+              (ref as RefObject<InputsRef>).current!.dueDate = el;
             }}
           />
         </div>
-      </form>
+      </section>
     );
   }
 );
